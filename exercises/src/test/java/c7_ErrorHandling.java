@@ -2,7 +2,9 @@ import org.junit.jupiter.api.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+import reactor.util.retry.Retry;
 
+import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
@@ -33,7 +35,7 @@ public class c7_ErrorHandling extends ErrorHandlingBase {
     @Test
     public void houston_we_have_a_problem() {
         AtomicReference<Throwable> errorRef = new AtomicReference<>();
-        Flux<String> heartBeat = probeHeartBeatSignal()
+        Flux<String> heartBeat = probeHeartBeatSignal().timeout(Duration.ofSeconds(3)).doOnError(errorRef :: set)
                 //todo: do your changes here
                 //todo: & here
                 ;
@@ -53,7 +55,7 @@ public class c7_ErrorHandling extends ErrorHandlingBase {
      */
     @Test
     public void potato_potato() {
-        Mono<String> currentUser = getCurrentUser()
+        Mono<String> currentUser = getCurrentUser().onErrorMap(e -> new SecurityException(e)) 
                 //todo: change this line only
                 //use SecurityException
                 ;
@@ -70,7 +72,7 @@ public class c7_ErrorHandling extends ErrorHandlingBase {
      */
     @Test
     public void under_the_rug() {
-        Flux<String> messages = messageNode();
+        Flux<String> messages = messageNode().onErrorResume(throwable -> Flux.empty())
         //todo: change this line only
         ;
 
@@ -86,7 +88,7 @@ public class c7_ErrorHandling extends ErrorHandlingBase {
     @Test
     public void have_a_backup() {
         //todo: feel free to change code as you need
-        Flux<String> messages = null;
+        Flux<String> messages = messageNode().onErrorResume(throwable -> backupMessageNode());
         messageNode();
         backupMessageNode();
 
@@ -103,7 +105,7 @@ public class c7_ErrorHandling extends ErrorHandlingBase {
     @Test
     public void error_reporter() {
         //todo: feel free to change code as you need
-        Flux<String> messages = messageNode();
+        Flux<String> messages = messageNode().onErrorMap(errorReportService(null));
         errorReportService(null);
 
         //don't change below this line
@@ -121,7 +123,7 @@ public class c7_ErrorHandling extends ErrorHandlingBase {
      */
     @Test
     public void unit_of_work() {
-        Flux<Task> taskFlux = taskQueue()
+        Flux<Task> taskFlux = taskQueue().flatMap(task -> task.execute().then(task.commit()).onErrorResume(task::rollback).thenReturn(task))
                 //todo: do your changes here
                 ;
 
@@ -139,7 +141,7 @@ public class c7_ErrorHandling extends ErrorHandlingBase {
     @Test
     public void billion_dollar_mistake() {
         Flux<String> content = getFilesContent()
-                .flatMap(Function.identity())
+                .flatMap(Function.identity()).onErrorContinue((throwable,o) -> System.out.println("skip" + throwable))
                 //todo: change this line only
                 ;
 
@@ -164,7 +166,7 @@ public class c7_ErrorHandling extends ErrorHandlingBase {
     public void resilience() {
         //todo: change code as you need
         Flux<String> content = getFilesContent()
-                .flatMap(Function.identity()); //start from here
+                .flatMap(Function.identity()).onErrorResume(throwable -> ); //start from here
 
         //don't change below this line
         StepVerifier.create(content)
@@ -178,7 +180,7 @@ public class c7_ErrorHandling extends ErrorHandlingBase {
      */
     @Test
     public void its_hot_in_here() {
-        Mono<Integer> temperature = temperatureSensor()
+        Mono<Integer> temperature = temperatureSensor().retry();
                 //todo: change this line only
                 ;
 
@@ -194,8 +196,8 @@ public class c7_ErrorHandling extends ErrorHandlingBase {
      */
     @Test
     public void back_off() {
-        Mono<String> connection_result = establishConnection()
-                //todo: change this line only
+        Mono<String> connection_result = establishConnection().retryWhen(Retry.backoff(3, Duration.ofSeconds(3)))
+        		//todo: change this line only
                 ;
 
         StepVerifier.create(connection_result)
@@ -211,7 +213,7 @@ public class c7_ErrorHandling extends ErrorHandlingBase {
     @Test
     public void good_old_polling() {
         //todo: change code as you need
-        Flux<String> alerts = null;
+        Flux<String> alerts = nodeAlerts().repeatWhenEmpty(longflux -> Mono.delay(Duration.ofSeconds(1))).repeat();
         nodeAlerts();
 
         //don't change below this line

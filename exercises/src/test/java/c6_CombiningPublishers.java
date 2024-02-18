@@ -40,7 +40,7 @@ public class c6_CombiningPublishers extends CombiningPublishersBase {
         Hooks.enableContextLossTracking(); //used for testing - detects if you are cheating!
 
         //todo: feel free to change code as you need
-        Mono<String> currentUserEmail = null;
+        Mono<String> currentUserEmail = getCurrentUser().flatMap(userItem -> getUserEmail(userItem));
         Mono<String> currentUserMono = getCurrentUser();
         getUserEmail(null);
 
@@ -60,7 +60,7 @@ public class c6_CombiningPublishers extends CombiningPublishersBase {
     @Test
     public void task_executor() {
         //todo: feel free to change code as you need
-        Flux<Void> tasks = null;
+        Flux<Void> tasks = taskExecutor().flatMap(task -> task);
         taskExecutor();
 
         //don't change below this line
@@ -79,7 +79,7 @@ public class c6_CombiningPublishers extends CombiningPublishersBase {
     @Test
     public void streaming_service() {
         //todo: feel free to change code as you need
-        Flux<Message> messageFlux = null;
+        Flux<Message> messageFlux = streamingService().flatMapMany(MessageFlux1 -> MessageFlux1);
         streamingService();
 
         //don't change below this line
@@ -98,7 +98,7 @@ public class c6_CombiningPublishers extends CombiningPublishersBase {
     @Test
     public void i_am_rubber_you_are_glue() {
         //todo: feel free to change code as you need
-        Flux<Integer> numbers = null;
+        Flux<Integer> numbers = numberService1().concatWith(numberService2());
         numberService1();
         numberService2();
 
@@ -124,8 +124,8 @@ public class c6_CombiningPublishers extends CombiningPublishersBase {
     @Test
     public void task_executor_again() {
         //todo: feel free to change code as you need
-        Flux<Void> tasks = null;
-        taskExecutor();
+        Flux<Void> tasks = 
+        taskExecutor().flatMap(voidMono -> voidMono);
 
         //don't change below this line
         StepVerifier.create(tasks)
@@ -142,7 +142,7 @@ public class c6_CombiningPublishers extends CombiningPublishersBase {
     @Test
     public void need_for_speed() {
         //todo: feel free to change code as you need
-        Flux<String> stonks = null;
+        Flux<String> stonks = Flux.firstWithValue(getStocksGrpc(), getStocksRest());
         getStocksGrpc();
         getStocksRest();
 
@@ -160,7 +160,7 @@ public class c6_CombiningPublishers extends CombiningPublishersBase {
     @Test
     public void plan_b() {
         //todo: feel free to change code as you need
-        Flux<String> stonks = null;
+        Flux<String> stonks = getStocksLocalCache().switchIfEmpty(getStocksRest());
         getStocksLocalCache();
         getStocksRest();
 
@@ -179,7 +179,7 @@ public class c6_CombiningPublishers extends CombiningPublishersBase {
     @Test
     public void mail_box_switcher() {
         //todo: feel free to change code as you need
-        Flux<Message> myMail = null;
+        Flux<Message> myMail = mailBoxPrimary().switch;
         mailBoxPrimary();
         mailBoxSecondary();
 

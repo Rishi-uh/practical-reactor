@@ -32,9 +32,8 @@ public class c13_Context extends ContextBase {
      */
     public Mono<Message> messageHandler(String payload) {
         //todo: do your changes withing this method
-        return Mono.just(new Message("set correlation_id from context here", payload));
+        return Mono.deferContextual(contextView -> Mono.just(new Message(contextView.get(HTTP_CORRELATION_ID), payload)));
     }
-
     @Test
     public void message_tracker() {
         //don't change this code
